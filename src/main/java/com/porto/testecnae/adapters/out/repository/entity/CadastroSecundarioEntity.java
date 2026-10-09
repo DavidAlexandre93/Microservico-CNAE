@@ -14,12 +14,13 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+/** Entidade JPA de cadastro secundario com associacao obrigatoria a um CNAE. */
 @Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
 @Table(name = "cadastro_secundario")
+@Entity
 public class CadastroSecundarioEntity {
 
     @Id

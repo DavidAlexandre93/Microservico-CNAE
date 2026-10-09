@@ -11,12 +11,13 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+/** Entidade JPA que mapeia a tabela de atividades economicas CNAE. */
 @Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
 @Table(name = "atividade_economica_cnae")
+@Entity
 public class AtividadeEconomicaCnaeEntity {
 
     @Id

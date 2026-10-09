@@ -6,34 +6,35 @@ import com.porto.testecnae.adapters.in.api.model.CadastroSecundarioResponse;
 import com.porto.testecnae.application.core.domain.AtividadeEconomicaCnae;
 import com.porto.testecnae.application.core.domain.CadastroSecundario;
 import com.porto.testecnae.application.ports.in.CadastrarCadastroSecundarioCommand;
-import lombok.experimental.UtilityClass;
+import org.mapstruct.Mapper;
 
-@UtilityClass
-public final class CnaeApiMapper {
+/**
+ * Converte objetos do dominio em DTOs HTTP e requisicoes em comandos de aplicacao.
+ */
+@Mapper(componentModel = "spring")
+public interface CnaeApiMapper {
 
-    public static AtividadeEconomicaCnaeResponse toResponse(AtividadeEconomicaCnae atividade) {
-        return new AtividadeEconomicaCnaeResponse(
-                atividade.id(),
-                atividade.codigo(),
-                atividade.descricao(),
-                atividade.secao()
-        );
-    }
+    /**
+     * Converte uma atividade economica do dominio para o DTO de resposta.
+     *
+     * @param atividade atividade economica a converter
+     * @return DTO de resposta da atividade
+     */
+    AtividadeEconomicaCnaeResponse toResponse(AtividadeEconomicaCnae atividade);
 
-    public static CadastroSecundarioResponse toResponse(CadastroSecundario cadastro) {
-        return new CadastroSecundarioResponse(
-                cadastro.id(),
-                cadastro.nomeFantasia(),
-                cadastro.documento(),
-                toResponse(cadastro.cnae())
-        );
-    }
+    /**
+     * Converte um cadastro secundario do dominio para o DTO de resposta.
+     *
+     * @param cadastro cadastro secundario a converter
+     * @return DTO de resposta do cadastro
+     */
+    CadastroSecundarioResponse toResponse(CadastroSecundario cadastro);
 
-    public static CadastrarCadastroSecundarioCommand toCommand(CadastroSecundarioRequest request) {
-        return new CadastrarCadastroSecundarioCommand(
-                request.getNomeFantasia(),
-                request.getDocumento(),
-                request.getCodigoCnae()
-        );
-    }
+    /**
+     * Converte o DTO recebido na API para o comando de cadastro da aplicacao.
+     *
+     * @param request DTO recebido na requisicao
+     * @return comando de cadastro para a camada de aplicacao
+     */
+    CadastrarCadastroSecundarioCommand toCommand(CadastroSecundarioRequest request);
 }
