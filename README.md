@@ -406,19 +406,3 @@ Exemplo confirmado no POST:
   }
 }
 ```
-
-## Desafio para o candidato
-
-Objetivo:
-
-1. Fazer a aplicacao subir corretamente.
-2. Validar os endpoints disponiveis.
-3. Identificar e corrigir problemas encontrados durante a execucao.
-4. Explicar as causas dos problemas e as decisoes tomadas.
-5. Adicionar ou ajustar testes, quando fizer sentido.
-
-## Entrega esperada
-
-- Codigo corrigido em um branch ou pull request.
-- Breve explicacao tecnica das alteracoes.
-- Evidencias de execucao, como comandos usados, respostas dos endpoints ou testes.
