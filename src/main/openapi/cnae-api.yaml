@@ -1,0 +1,260 @@
+openapi: 3.0.3
+info:
+  title: Microservico CNAE
+  version: 1.0.0
+  description: API para consulta de atividades economicas CNAE e cadastro de atividades secundarias.
+servers:
+  - url: /
+tags:
+  - name: Cnaes
+    description: Consulta de atividades economicas CNAE.
+  - name: CadastrosSecundarios
+    description: Cadastro e consulta de atividades secundarias.
+paths:
+  /api/cnaes:
+    get:
+      tags:
+        - Cnaes
+      operationId: listarCnaes
+      summary: Lista todos os CNAEs.
+      responses:
+        '200':
+          description: Lista de CNAEs cadastrados.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AtividadeEconomicaCnaeResponse'
+        '500':
+          $ref: '#/components/responses/ErroInterno'
+  /api/cnaes/buscar:
+    get:
+      tags:
+        - Cnaes
+      operationId: buscarCnaesPorDescricao
+      summary: Busca CNAEs por parte da descricao.
+      parameters:
+        - name: termo
+          in: query
+          required: true
+          description: Texto contido na descricao do CNAE.
+          schema:
+            type: string
+            minLength: 1
+            pattern: '.*\S.*'
+      responses:
+        '200':
+          description: CNAEs que correspondem ao termo informado.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AtividadeEconomicaCnaeResponse'
+        '400':
+          $ref: '#/components/responses/RequisicaoInvalida'
+        '500':
+          $ref: '#/components/responses/ErroInterno'
+  /api/cnaes/codigo:
+    get:
+      tags:
+        - Cnaes
+      operationId: buscarCnaePorCodigo
+      summary: Consulta um CNAE pelo codigo.
+      parameters:
+        - $ref: '#/components/parameters/CodigoCnae'
+      responses:
+        '200':
+          description: CNAE encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AtividadeEconomicaCnaeResponse'
+        '400':
+          $ref: '#/components/responses/RequisicaoInvalida'
+        '404':
+          $ref: '#/components/responses/CnaeNaoEncontrado'
+        '500':
+          $ref: '#/components/responses/ErroInterno'
+  /api/cadastros-secundarios:
+    get:
+      tags:
+        - CadastrosSecundarios
+      operationId: listarCadastrosSecundarios
+      summary: Lista todos os cadastros secundarios.
+      responses:
+        '200':
+          description: Lista de cadastros secundarios.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CadastroSecundarioResponse'
+        '500':
+          $ref: '#/components/responses/ErroInterno'
+    post:
+      tags:
+        - CadastrosSecundarios
+      operationId: cadastrarCadastroSecundario
+      summary: Cria um cadastro secundario vinculado a um CNAE.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CadastroSecundarioRequest'
+      responses:
+        '201':
+          description: Cadastro secundario criado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CadastroSecundarioResponse'
+        '400':
+          $ref: '#/components/responses/RequisicaoInvalida'
+        '404':
+          $ref: '#/components/responses/CnaeNaoEncontrado'
+        '500':
+          $ref: '#/components/responses/ErroInterno'
+  /api/cadastros-secundarios/validar-cnae:
+    get:
+      tags:
+        - CadastrosSecundarios
+      operationId: validarCnae
+      summary: Valida se um CNAE pode ser usado no cadastro.
+      parameters:
+        - name: codigoCnae
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/CodigoCnae'
+      responses:
+        '200':
+          description: CNAE valido para cadastro.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AtividadeEconomicaCnaeResponse'
+        '400':
+          $ref: '#/components/responses/RequisicaoInvalida'
+        '404':
+          $ref: '#/components/responses/CnaeNaoEncontrado'
+        '500':
+          $ref: '#/components/responses/ErroInterno'
+components:
+  parameters:
+    CodigoCnae:
+      name: codigo
+      in: query
+      required: true
+      description: Codigo CNAE no formato 0000-0/00.
+      schema:
+        $ref: '#/components/schemas/CodigoCnae'
+  responses:
+    RequisicaoInvalida:
+      description: Parametros ou corpo da requisicao invalidos.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiErrorResponse'
+    CnaeNaoEncontrado:
+      description: CNAE nao encontrado.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiErrorResponse'
+    ErroInterno:
+      description: Erro interno do servidor.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiErrorResponse'
+  schemas:
+    CodigoCnae:
+      type: string
+      minLength: 9
+      maxLength: 9
+      pattern: '^\d{4}-\d/\d{2}$'
+      example: 6201-5/01
+    AtividadeEconomicaCnaeResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - codigo
+        - descricao
+        - secao
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 5
+        codigo:
+          $ref: '#/components/schemas/CodigoCnae'
+        descricao:
+          type: string
+          example: Desenvolvimento de programas de computador sob encomenda
+        secao:
+          type: string
+          example: Tecnologia
+    CadastroSecundarioRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - nomeFantasia
+        - documento
+        - codigoCnae
+      properties:
+        nomeFantasia:
+          type: string
+          minLength: 1
+          maxLength: 120
+          pattern: '.*\S.*'
+          example: Tech Porto
+        documento:
+          type: string
+          pattern: '^\d{14}$'
+          example: '12345678000199'
+        codigoCnae:
+          $ref: '#/components/schemas/CodigoCnae'
+    CadastroSecundarioResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - nomeFantasia
+        - documento
+        - cnae
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        nomeFantasia:
+          type: string
+          example: Tech Porto
+        documento:
+          type: string
+          example: '12345678000199'
+        cnae:
+          $ref: '#/components/schemas/AtividadeEconomicaCnaeResponse'
+    ApiErrorResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - status
+        - erro
+        - mensagem
+      properties:
+        status:
+          type: integer
+          format: int32
+          example: 404
+        erro:
+          type: string
+          example: Not Found
+        mensagem:
+          type: string
+          example: 'CNAE nao encontrado para o codigo: 0000-0/00'
