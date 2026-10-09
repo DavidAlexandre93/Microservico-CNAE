@@ -2,6 +2,24 @@
 
 Projeto Spring Boot criado para avaliacao de candidatos a vagas de Lider Tecnico e Analista.
 
+## Resumo rapido
+
+- API REST para consulta e validacao de CNAEs e cadastros secundarios.
+- Arquitetura hexagonal com separacao clara entre adapters, application e domain.
+- Contrato HTTP definido em OpenAPI e validado durante o build.
+- Persistencia com Spring Data JPA + H2 em memoria.
+- Execucao padrao em `http://localhost:9090`.
+
+## Documentacao Swagger / OpenAPI
+
+Quando a aplicacao estiver em execucao, os links de documentacao sao:
+
+```text
+Swagger UI:      http://localhost:9090/swagger-ui.html
+OpenAPI JSON:    http://localhost:9090/v3/api-docs
+Contrato YAML:   http://localhost:9090/openapi/cnae-api.yaml
+```
+
 ## Stack
 
 - Java 25
@@ -160,22 +178,21 @@ conversao para as portas da aplicacao.
 
 ### 5. Executar build e testes
 
-O comando recomendado para validar toda a aplicacao e:
+Comando principal para validar a aplicacao:
 
 ```powershell
 mvn clean verify
 ```
 
-Ele executa, nesta ordem:
+Fluxo executado:
 
-1. Limpeza do diretorio `target`.
-2. Validacao do arquivo OpenAPI.
-3. Geracao das interfaces e modelos HTTP.
-4. Compilacao da aplicacao.
-5. Testes unitarios das regras dos casos de uso e do fallback HTTP 500.
-6. Testes integrados com servidor HTTP real, OpenAPI, controllers, adapters JPA e H2 em memoria.
-7. Regras de arquitetura hexagonal com ArchUnit, mantidas no grupo rapido `unit`.
-8. Empacotamento do JAR, relatorio JaCoCo e verificacao de cobertura minima de 85% das linhas.
+1. limpeza de `target`;
+2. validacao do contrato OpenAPI;
+3. geracao das interfaces e modelos HTTP;
+4. compilacao da aplicacao;
+5. execucao dos testes unitarios e integrados;
+6. verificacao de arquitetura com ArchUnit;
+7. geracao do relatorio JaCoCo e checagem de cobertura minima de 85%.
 
 Resultado esperado:
 
@@ -185,16 +202,13 @@ All coverage checks have been met.
 BUILD SUCCESS
 ```
 
-O relatorio navegavel de cobertura e criado em:
+Relatorio de cobertura:
 
 ```text
 target/site/jacoco/index.html
 ```
 
-O workflow `.github/workflows/ci.yml` executa o mesmo comando em Java 25 para toda
-Pull Request direcionada a `main`.
-
-Para executar apenas os testes sem empacotar nem gerar o relatorio final:
+Para executar apenas os testes:
 
 ```powershell
 mvn test
@@ -206,23 +220,23 @@ mvn test
 mvn spring-boot:run
 ```
 
-A aplicacao sera iniciada em `http://localhost:8080`.
+A aplicacao inicia em `http://localhost:9090`.
 
-Se a porta `8080` ja estiver ocupada, utilize outra porta sem alterar o projeto:
+Se a porta `9090` estiver ocupada:
 
 ```powershell
 mvn spring-boot:run "-Dspring-boot.run.arguments=--server.port=18080"
 ```
 
-Nesse caso, substitua `8080` por `18080` nas URLs dos exemplos.
+Nesse caso, use a porta alternativa nas URLs de exemplo.
 
 ### 7. Verificar OpenAPI e Swagger UI
 
 Com a aplicacao em execucao, acesse:
 
 ```text
-Contrato OpenAPI: http://localhost:8080/openapi/cnae-api.yaml
-Swagger UI:       http://localhost:8080/swagger-ui.html
+Contrato OpenAPI: http://localhost:9090/openapi/cnae-api.yaml
+Swagger UI:       http://localhost:9090/swagger-ui.html
 ```
 
 A Swagger UI esta configurada para carregar diretamente o contrato versionado em
@@ -231,7 +245,7 @@ A Swagger UI esta configurada para carregar diretamente o contrato versionado em
 ### 8. Acessar o H2
 
 ```text
-Console:  http://localhost:8080/h2-console
+Console:  http://localhost:9090/h2-console
 JDBC URL: jdbc:h2:mem:cnaedb
 User:     sa
 Password: deixar vazio
@@ -239,33 +253,38 @@ Password: deixar vazio
 
 ## Endpoints
 
+Total: 6 endpoints disponiveis na API.
+
 ```http
-GET /api/cnaes
-GET /api/cnaes/buscar?termo=programas
-GET /api/cnaes/codigo?codigo=6201-5/01
-GET /api/cadastros-secundarios
-GET /api/cadastros-secundarios/validar-cnae?codigoCnae=6201-5/01
-POST /api/cadastros-secundarios
+GET    http://localhost:9090/api/cnaes
+GET    http://localhost:9090/api/cnaes/buscar?termo=programas
+GET    http://localhost:9090/api/cnaes/codigo?codigo=6201-5/01
+GET    http://localhost:9090/api/cadastros-secundarios
+GET    http://localhost:9090/api/cadastros-secundarios/validar-cnae?codigoCnae=6201-5/01
+POST   http://localhost:9090/api/cadastros-secundarios
 ```
 
 Comportamento esperado:
 
-- `GET /api/cnaes` deve retornar todas as atividades cadastradas.
-- `GET /api/cnaes/buscar?termo={texto}` deve buscar CNAEs que contenham o texto informado em qualquer parte da descricao, ignorando maiusculas e minusculas.
-- `GET /api/cnaes/codigo?codigo={codigo}` deve retornar o CNAE do codigo informado.
+- `GET http://localhost:9090/api/cnaes` deve retornar todas as atividades cadastradas.
+- `GET http://localhost:9090/api/cnaes/buscar?termo={texto}` deve buscar CNAEs que contenham o texto informado em qualquer parte da descricao, ignorando maiusculas e minusculas.
+- `GET http://localhost:9090/api/cnaes/codigo?codigo={codigo}` deve retornar o CNAE do codigo informado.
+- `GET http://localhost:9090/api/cadastros-secundarios` deve listar todos os cadastros secundarios.
+- `GET http://localhost:9090/api/cadastros-secundarios/validar-cnae?codigoCnae={codigo}` deve validar se o CNAE informado pode ser usado no cadastro.
+- `POST http://localhost:9090/api/cadastros-secundarios` deve criar um cadastro vinculado a um CNAE existente.
 - Codigos CNAE inexistentes devem retornar uma resposta HTTP adequada para recurso nao encontrado.
-- `POST /api/cadastros-secundarios` deve criar um cadastro vinculado a um CNAE existente.
-- `GET /api/cadastros-secundarios/validar-cnae?codigoCnae={codigo}` deve validar se o CNAE informado pode ser usado no cadastro.
-- Cadastros secundários com CNAE inexistente nao devem ser criados.
+- Cadastros secundarios com CNAE inexistente nao devem ser criados.
 
 Exemplos no PowerShell:
 
 ```powershell
-curl.exe "http://localhost:8080/api/cnaes"
-curl.exe "http://localhost:8080/api/cnaes/buscar?termo=programas"
-curl.exe "http://localhost:8080/api/cnaes/codigo?codigo=6201-5%2F01"
+curl.exe "http://localhost:9090/api/cnaes"
+curl.exe "http://localhost:9090/api/cnaes/buscar?termo=programas"
+curl.exe "http://localhost:9090/api/cnaes/codigo?codigo=6201-5%2F01"
+curl.exe "http://localhost:9090/api/cadastros-secundarios"
+curl.exe "http://localhost:9090/api/cadastros-secundarios/validar-cnae?codigoCnae=6201-5%2F01"
 
-curl.exe -X POST "http://localhost:8080/api/cadastros-secundarios" `
+curl.exe -X POST "http://localhost:9090/api/cadastros-secundarios" `
   -H "Content-Type: application/json" `
   --data-raw '{"nomeFantasia":"Tech Porto","documento":"12345678000199","codigoCnae":"6201-5/01"}'
 ```
@@ -300,6 +319,25 @@ A suite cobre:
 - isolamento da aplicacao em relacao a frameworks e adapters.
 
 ## Relatorio tecnico
+
+### Falhas encontradas, causa raiz e decisoes tomadas
+
+Durante a execucao do desafio, os principais problemas observados e corrigidos foram:
+
+- `porta 8080 em uso`: a aplicacao foi configurada para `server.port=8080`, mas o ambiente ja possuia outro processo Java utilizando essa porta. A causa raiz foi a falta de isolamento de ambiente e a dependencia de uma porta fixa. A decisao foi mover a aplicacao para `9090` como configuracao padrao, mantendo o projeto executavel sem conflitar com servicos legados do sistema.
+- `acoplamento de negocio com infraestrutura`: a arquitetura inicial corria risco de misturar regras de negocio, HTTP e persistencia. A causa raiz foi a ausencia de limites bem definidos entre camadas. A decisao foi reforcar a separacao hexagonal com portas de entrada/saida, composicao em `BeanConfiguration` e validacao arquitetural via ArchUnit.
+- `diferenca entre contrato e implementacao`: endpoints, validacoes e modelos poderiam divergir se mantidos manualmente em varios pontos. A causa raiz foi a duplicacao de definicoes entre OpenAPI e controllers. A decisao foi tornar o OpenAPI o contrato de origem, gerando interfaces e modelos automaticamente durante o build.
+- `validacao insuficiente de entrada`: campos com espacos em branco podiam ser aceitos e JSON com propriedades desconhecidas poderia ser ignorado. A causa raiz foi a ausencia de padroes mais rigorosos no contrato e na desserializacao. A decisao foi usar `pattern` para exigir caracteres nao em branco e `fail-on-unknown-properties=true` para rejeitar campos fora do contrato.
+- `respostas 500 sem padrao`: erros inesperados podiam sair do modelo documentado. A causa raiz foi a falta de tratamento global de excecoes para falhas nao previstas. A decisao foi centralizar o tratamento em `RestExceptionHandler`, com resposta generica padronizada e log de observabilidade.
+- `suite de testes pouco representativa`: o projeto iniciante tinha pouca cobertura de cenarios e responsabilidades misturadas. A causa raiz foi a ausencia de separacao em grupos `unit` e `integration` e de validacao arquitetural automatica. A decisao foi reorganizar os testes para validar regras de negocio, erro HTTP e arquitetura sem acoplamento excessivo a implementacao.
+
+### Decisoes tecnicas principais
+
+- O dominio foi mantido sem dependencia de frameworks e persistencia, enquanto entidades JPA ficaram na camada de infraestrutura.
+- O caso de uso valida a existencia do CNAE antes da criacao do cadastro, preservando a regra de negocio no centro da aplicacao.
+- O mapeamento HTTP para dominio foi centralizado em conversores e DTOs gerados a partir do OpenAPI, reduzindo duplicacao.
+- O build foi ajustado para validar OpenAPI, compilar, testar e verificar cobertura minima, evitando regressao no contrato e na arquitetura.
+- A aplicacao foi configurada para rodar em porta livre e segura para o ambiente local (`9090`), evitando conflito com processos ja existentes.
 
 ### Problemas identificados e causa raiz
 

@@ -6,11 +6,10 @@ import com.porto.testecnae.adapters.in.api.model.CadastroSecundarioResponse;
 import com.porto.testecnae.application.core.domain.AtividadeEconomicaCnae;
 import com.porto.testecnae.application.core.domain.CadastroSecundario;
 import com.porto.testecnae.application.ports.in.CadastrarCadastroSecundarioCommand;
+import lombok.experimental.UtilityClass;
 
+@UtilityClass
 public final class CnaeApiMapper {
-
-    private CnaeApiMapper() {
-    }
 
     public static AtividadeEconomicaCnaeResponse toResponse(AtividadeEconomicaCnae atividade) {
         return new AtividadeEconomicaCnaeResponse(

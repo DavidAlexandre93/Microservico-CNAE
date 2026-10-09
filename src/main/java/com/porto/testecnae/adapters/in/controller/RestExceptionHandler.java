@@ -12,6 +12,7 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @RestControllerAdvice
 @Slf4j
@@ -19,10 +20,14 @@ public class RestExceptionHandler {
 
     @ExceptionHandler(CnaeNaoEncontradoException.class)
     public ResponseEntity<ApiErrorResponse> handleCnaeNaoEncontrado(CnaeNaoEncontradoException exception) {
-        var status = HttpStatus.NOT_FOUND;
-        var response = new ApiErrorResponse(status.value(), status.getReasonPhrase(), exception.getMessage());
+        log.warn("CNAE nao encontrado na requisicao: {}", exception.getMessage());
+        return error(HttpStatus.NOT_FOUND, exception.getMessage());
+    }
 
-        return ResponseEntity.status(status).body(response);
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleRecursoNaoEncontrado() {
+        log.warn("Recurso nao encontrado na requisicao");
+        return error(HttpStatus.NOT_FOUND, "Recurso nao encontrado");
     }
 
     @ExceptionHandler({
@@ -32,28 +37,20 @@ public class RestExceptionHandler {
             MissingServletRequestParameterException.class,
             HttpMessageNotReadableException.class
     })
-    public ResponseEntity<ApiErrorResponse> handleRequisicaoInvalida(Exception exception) {
-        var status = HttpStatus.BAD_REQUEST;
-        var response = new ApiErrorResponse(
-                status.value(),
-                status.getReasonPhrase(),
-                "Parametros ou corpo da requisicao invalidos"
-        );
-
-        return ResponseEntity.status(status).body(response);
+    public ResponseEntity<ApiErrorResponse> handleRequisicaoInvalida() {
+        log.warn("Parametros ou corpo da requisicao invalidos");
+        return error(HttpStatus.BAD_REQUEST, "Parametros ou corpo da requisicao invalidos");
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorResponse> handleErroInesperado(Exception exception) {
         log.error("Erro inesperado ao processar a requisicao", exception);
 
-        var status = HttpStatus.INTERNAL_SERVER_ERROR;
-        var response = new ApiErrorResponse(
-                status.value(),
-                status.getReasonPhrase(),
-                "Erro interno do servidor"
-        );
+        return error(HttpStatus.INTERNAL_SERVER_ERROR, "Erro interno do servidor");
+    }
 
+    private ResponseEntity<ApiErrorResponse> error(HttpStatus status, String mensagem) {
+        var response = new ApiErrorResponse(status.value(), status.getReasonPhrase(), mensagem);
         return ResponseEntity.status(status).body(response);
     }
 }

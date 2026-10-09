@@ -1,6 +1,6 @@
 package com.porto.testecnae.adapters.out;
 
-import com.porto.testecnae.adapters.out.repository.SpringDataAtividadeEconomicaCnaeRepository;
+import com.porto.testecnae.adapters.out.repository.dao.AtividadeEconomicaCnaeDao;
 import com.porto.testecnae.adapters.out.repository.entity.AtividadeEconomicaCnaeEntity;
 import com.porto.testecnae.application.core.domain.AtividadeEconomicaCnae;
 import com.porto.testecnae.application.ports.out.AtividadeEconomicaCnaeOutputPort;
@@ -14,11 +14,11 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class AtividadeEconomicaCnaePersistenceAdapter implements AtividadeEconomicaCnaeOutputPort {
 
-    private final SpringDataAtividadeEconomicaCnaeRepository repository;
+    private final AtividadeEconomicaCnaeDao dao;
 
     @Override
     public List<AtividadeEconomicaCnae> buscarTodas() {
-        return repository.findAll()
+        return dao.buscarTodas()
                 .stream()
                 .map(AtividadeEconomicaCnaePersistenceAdapter::toDomain)
                 .toList();
@@ -26,7 +26,7 @@ public class AtividadeEconomicaCnaePersistenceAdapter implements AtividadeEconom
 
     @Override
     public List<AtividadeEconomicaCnae> buscarPorDescricao(String termo) {
-        return repository.findByDescricaoContainingIgnoreCaseOrderByCodigo(termo)
+        return dao.buscarPorDescricao(termo)
                 .stream()
                 .map(AtividadeEconomicaCnaePersistenceAdapter::toDomain)
                 .toList();
@@ -34,7 +34,7 @@ public class AtividadeEconomicaCnaePersistenceAdapter implements AtividadeEconom
 
     @Override
     public Optional<AtividadeEconomicaCnae> buscarPorCodigo(String codigo) {
-        return repository.findByCodigo(codigo)
+        return dao.buscarPorCodigo(codigo)
                 .map(AtividadeEconomicaCnaePersistenceAdapter::toDomain);
     }
 

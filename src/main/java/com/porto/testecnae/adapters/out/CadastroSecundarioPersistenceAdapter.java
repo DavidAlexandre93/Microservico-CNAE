@@ -1,10 +1,9 @@
 package com.porto.testecnae.adapters.out;
 
-import com.porto.testecnae.adapters.out.repository.SpringDataAtividadeEconomicaCnaeRepository;
-import com.porto.testecnae.adapters.out.repository.SpringDataCadastroSecundarioRepository;
+import com.porto.testecnae.adapters.out.repository.dao.AtividadeEconomicaCnaeDao;
+import com.porto.testecnae.adapters.out.repository.dao.CadastroSecundarioDao;
 import com.porto.testecnae.adapters.out.repository.entity.CadastroSecundarioEntity;
 import com.porto.testecnae.application.core.domain.CadastroSecundario;
-import com.porto.testecnae.application.core.exception.CnaeNaoEncontradoException;
 import com.porto.testecnae.application.ports.out.CadastroSecundarioOutputPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -16,14 +15,13 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CadastroSecundarioPersistenceAdapter implements CadastroSecundarioOutputPort {
 
-    private final SpringDataCadastroSecundarioRepository repository;
-    private final SpringDataAtividadeEconomicaCnaeRepository cnaeRepository;
+    private final CadastroSecundarioDao cadastroDao;
+    private final AtividadeEconomicaCnaeDao cnaeDao;
 
     @Override
     @Transactional
     public CadastroSecundario salvar(CadastroSecundario cadastro) {
-        var cnaeEntity = cnaeRepository.findByCodigo(cadastro.cnae().codigo())
-                .orElseThrow(() -> new CnaeNaoEncontradoException(cadastro.cnae().codigo()));
+        var cnaeEntity = cnaeDao.buscarPorId(cadastro.cnae().id());
 
         var entity = CadastroSecundarioEntity.builder()
                 .id(cadastro.id())
@@ -32,13 +30,20 @@ public class CadastroSecundarioPersistenceAdapter implements CadastroSecundarioO
                 .cnae(cnaeEntity)
                 .build();
 
-        return toDomain(repository.save(entity));
+        var entitySalva = cadastroDao.salvar(entity);
+
+        return new CadastroSecundario(
+                entitySalva.getId(),
+                entitySalva.getNomeFantasia(),
+                entitySalva.getDocumento(),
+                cadastro.cnae()
+        );
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<CadastroSecundario> buscarTodos() {
-        return repository.buscarTodosComCnae()
+        return cadastroDao.buscarTodosComCnae()
                 .stream()
                 .map(CadastroSecundarioPersistenceAdapter::toDomain)
                 .toList();

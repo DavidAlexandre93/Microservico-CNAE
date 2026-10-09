@@ -2,9 +2,17 @@ openapi: 3.0.3
 info:
   title: Microservico CNAE
   version: 1.0.0
-  description: API para consulta de atividades economicas CNAE e cadastro de atividades secundarias.
+  description: >-
+    API para consulta de atividades economicas CNAE e cadastro de atividades secundarias.
+    O contrato documenta os fluxos de leitura, validacao e criacao de cadastros vinculados
+    a CNAEs, com respostas padronizadas em JSON.
+  contact:
+    name: Porto - Desafio Tecnico
+  license:
+    name: MIT
 servers:
   - url: /
+  - url: http://localhost:9090
 tags:
   - name: Cnaes
     description: Consulta de atividades economicas CNAE.
@@ -17,6 +25,9 @@ paths:
         - Cnaes
       operationId: listarCnaes
       summary: Lista todos os CNAEs.
+      description: >-
+        Retorna a lista completa de atividades economicas CNAE cadastradas no sistema.
+        Ideal para consulta geral e carregamento inicial de dados do cliente.
       responses:
         '200':
           description: Lista de CNAEs cadastrados.
@@ -34,6 +45,9 @@ paths:
         - Cnaes
       operationId: buscarCnaesPorDescricao
       summary: Busca CNAEs por parte da descricao.
+      description: >-
+        Busca por ocorrencias no campo de descricao, ignorando maiusculas e minusculas.
+        O parametro deve conter ao menos um caractere diferente de espaco.
       parameters:
         - name: termo
           in: query
@@ -62,6 +76,9 @@ paths:
         - Cnaes
       operationId: buscarCnaePorCodigo
       summary: Consulta um CNAE pelo codigo.
+      description: >-
+        Recupera um CNAE especifico usando o codigo no formato 0000-0/00.
+        Caso o registro nao exista, a API retorna 404 com payload padronizado.
       parameters:
         - $ref: '#/components/parameters/CodigoCnae'
       responses:
@@ -83,6 +100,8 @@ paths:
         - CadastrosSecundarios
       operationId: listarCadastrosSecundarios
       summary: Lista todos os cadastros secundarios.
+      description: >-
+        Retorna todos os cadastros secundarios registrados, incluindo o CNAE vinculado.
       responses:
         '200':
           description: Lista de cadastros secundarios.
@@ -99,6 +118,9 @@ paths:
         - CadastrosSecundarios
       operationId: cadastrarCadastroSecundario
       summary: Cria um cadastro secundario vinculado a um CNAE.
+      description: >-
+        Cria um cadastro secundario validando a existencia do CNAE antes de persistir o registro.
+        O CNAE informado deve existir para que a operacao seja concluida com sucesso.
       requestBody:
         required: true
         content:
@@ -124,6 +146,9 @@ paths:
         - CadastrosSecundarios
       operationId: validarCnae
       summary: Valida se um CNAE pode ser usado no cadastro.
+      description: >-
+        Verifica se o codigo CNAE informado existe e pode ser utilizado para um cadastro secundario.
+        Em caso de inexistencia, retorna 404 com a mensagem padronizada.
       parameters:
         - name: codigoCnae
           in: query

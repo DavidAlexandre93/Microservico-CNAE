@@ -126,6 +126,14 @@ class CnaeApiIntegrationTest {
     }
 
     @Test
+    void deveRetornar404ParaRotaInexistente() throws Exception {
+        var response = get("/rota-inexistente");
+
+        assertJsonResponse(response, 404);
+        assertError(response, 404, "Not Found", "Recurso nao encontrado");
+    }
+
+    @Test
     void deveCadastrarEListarCadastroSecundario() throws Exception {
         var antes = getCadastros();
         var response = post(
