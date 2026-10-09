@@ -1,8 +1,9 @@
-package com.porto.testecnae.application.core.usecase;
+package com.porto.testecnae.unit.application.core.usecase;
 
 import com.porto.testecnae.application.core.domain.AtividadeEconomicaCnae;
 import com.porto.testecnae.application.core.domain.CadastroSecundario;
 import com.porto.testecnae.application.core.exception.CnaeNaoEncontradoException;
+import com.porto.testecnae.application.core.usecase.CadastroSecundarioUseCase;
 import com.porto.testecnae.application.ports.in.CadastrarCadastroSecundarioCommand;
 import com.porto.testecnae.application.ports.out.AtividadeEconomicaCnaeOutputPort;
 import com.porto.testecnae.application.ports.out.CadastroSecundarioOutputPort;
@@ -64,19 +65,17 @@ class CadastroSecundarioUseCaseTest {
 
         var captor = ArgumentCaptor.forClass(CadastroSecundario.class);
         verify(cadastroOutputPort).salvar(captor.capture());
-        var novoCadastro = captor.getValue();
         assertAll(
                 () -> assertSame(salvo, resultado),
-                () -> assertNull(novoCadastro.id()),
-                () -> assertEquals(command.nomeFantasia(), novoCadastro.nomeFantasia()),
-                () -> assertEquals(command.documento(), novoCadastro.documento()),
-                () -> assertSame(CNAE, novoCadastro.cnae())
+                () -> assertNull(captor.getValue().id()),
+                () -> assertEquals(command.nomeFantasia(), captor.getValue().nomeFantasia()),
+                () -> assertEquals(command.documento(), captor.getValue().documento()),
+                () -> assertSame(CNAE, captor.getValue().cnae())
         );
-        verify(cnaeOutputPort).buscarPorCodigo(CNAE.codigo());
     }
 
     @Test
-    void naoDeveSalvarCadastroQuandoCnaeNaoExistir() {
+    void naoDeveSalvarQuandoCnaeNaoExistir() {
         var command = new CadastrarCadastroSecundarioCommand(
                 "Tech Porto",
                 "12345678000199",
@@ -84,41 +83,19 @@ class CadastroSecundarioUseCaseTest {
         );
         when(cnaeOutputPort.buscarPorCodigo(command.codigoCnae())).thenReturn(Optional.empty());
 
-        var exception = assertThrows(CnaeNaoEncontradoException.class, () -> useCase.cadastrar(command));
-
-        assertEquals(
-                "CNAE nao encontrado para o codigo: " + command.codigoCnae(),
-                exception.getMessage()
-        );
+        assertThrows(CnaeNaoEncontradoException.class, () -> useCase.cadastrar(command));
         verify(cadastroOutputPort, never()).salvar(any());
     }
 
     @Test
-    void deveValidarCnaeExistente() {
-        when(cnaeOutputPort.buscarPorCodigo(CNAE.codigo())).thenReturn(Optional.of(CNAE));
-
-        var resultado = useCase.validarCnae(CNAE.codigo());
-
-        assertSame(CNAE, resultado);
-        verify(cnaeOutputPort).buscarPorCodigo(CNAE.codigo());
-    }
-
-    @Test
-    void deveRejeitarValidacaoDeCnaeInexistente() {
-        var codigo = "0000-0/00";
-        when(cnaeOutputPort.buscarPorCodigo(codigo)).thenReturn(Optional.empty());
-
-        assertThrows(CnaeNaoEncontradoException.class, () -> useCase.validarCnae(codigo));
-    }
-
-    @Test
-    void deveListarCadastrosPelaPortaDeSaida() {
+    void deveValidarCnaeEListarCadastrosPelasPortasDeSaida() {
         var cadastros = List.of(new CadastroSecundario(10L, "Tech Porto", "12345678000199", CNAE));
+        when(cnaeOutputPort.buscarPorCodigo(CNAE.codigo())).thenReturn(Optional.of(CNAE));
         when(cadastroOutputPort.buscarTodos()).thenReturn(cadastros);
 
-        var resultado = useCase.listarTodos();
-
-        assertSame(cadastros, resultado);
+        assertSame(CNAE, useCase.validarCnae(CNAE.codigo()));
+        assertSame(cadastros, useCase.listarTodos());
+        verify(cnaeOutputPort).buscarPorCodigo(CNAE.codigo());
         verify(cadastroOutputPort).buscarTodos();
     }
 }

@@ -1,4 +1,4 @@
-package com.porto.testecnae.architecture;
+package com.porto.testecnae.unit.architecture;
 
 import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.junit.AnalyzeClasses;

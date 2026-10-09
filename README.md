@@ -172,15 +172,15 @@ Ele executa, nesta ordem:
 2. Validacao do arquivo OpenAPI.
 3. Geracao das interfaces e modelos HTTP.
 4. Compilacao da aplicacao.
-5. Testes unitarios de dominio, casos de uso, controllers, mapper, tratamento de erros e adapters.
-6. Testes integrados com servidor HTTP real e H2 em memoria.
-7. Testes de arquitetura hexagonal com ArchUnit.
+5. Testes unitarios das regras dos casos de uso e do fallback HTTP 500.
+6. Testes integrados com servidor HTTP real, OpenAPI, controllers, adapters JPA e H2 em memoria.
+7. Regras de arquitetura hexagonal com ArchUnit, mantidas no grupo rapido `unit`.
 8. Empacotamento do JAR, relatorio JaCoCo e verificacao de cobertura minima de 85% das linhas.
 
 Resultado esperado:
 
 ```text
-Tests run: 57, Failures: 0, Errors: 0, Skipped: 0
+Tests run: 35, Failures: 0, Errors: 0, Skipped: 0
 All coverage checks have been met.
 BUILD SUCCESS
 ```
@@ -272,19 +272,20 @@ curl.exe -X POST "http://localhost:8080/api/cadastros-secundarios" `
 
 ## Estrategia de testes
 
-Todos os testes ficam em `src/test/java` e sao divididos por responsabilidade:
+Todos os testes ficam exclusivamente nos grupos `unit` e `integration`:
 
 ```text
 src/test/java/com/porto/testecnae
-|-- adapters
-|   |-- in/controller             # Controllers, mapper e tratamento de erros
-|   `-- out                       # Mapeamento e delegacao dos adapters JPA
-|-- application/core
-|   |-- domain                    # Fabricacao dos objetos de dominio
-|   `-- usecase                   # Regras de negocio com portas simuladas
-|-- architecture                 # Regras da arquitetura hexagonal com ArchUnit
-`-- integration                  # HTTP + Spring + JPA + H2 + OpenAPI + Swagger UI
+|-- unit
+|   |-- application/core/usecase # Regras de negocio com portas simuladas
+|   |-- adapters/in/controller   # Somente o fallback HTTP 500 nao induzivel pela API
+|   `-- architecture             # Regras hexagonais rapidas com ArchUnit
+`-- integration                  # HTTP + OpenAPI + Spring + controllers + JPA + H2
 ```
+
+Nao ha testes unitarios para records, getters, mapeamentos triviais, controllers ou simples
+delegacoes de repository. Esses componentes sao exercitados de forma mais representativa pelo
+teste integrado, evitando testes acoplados a detalhes de implementacao e manutencao duplicada.
 
 A suite cobre:
 
@@ -309,7 +310,7 @@ A suite cobre:
 | Campos contendo apenas espacos eram validos | `minLength: 1` conta espacos como caracteres | Restricao `pattern` no contrato para exigir ao menos um caractere nao branco |
 | JSON aceitava propriedades fora do contrato | O comportamento padrao do Jackson ignora propriedades desconhecidas, mesmo com `additionalProperties: false` no OpenAPI | `fail-on-unknown-properties` habilitado e coberto por teste integrado |
 | Respostas 500 podiam fugir do modelo documentado | Existiam handlers apenas para validacao e CNAE inexistente | Handler de erro inesperado com log interno e resposta generica sem exposicao de detalhes |
-| Suite inicial misturava responsabilidades e cobria poucos cenarios | Um unico teste de contexto nao isolava regras nem protegia os limites arquiteturais | Suite separada em testes unitarios, integrados e de arquitetura, com gate de cobertura JaCoCo |
+| Suite inicial misturava responsabilidades e cobria poucos cenarios | Um unico teste de contexto nao isolava regras nem protegia os limites arquiteturais | Suite separada somente em `unit` e `integration`, com ArchUnit no grupo rapido e gate JaCoCo |
 
 ### Decisoes tecnicas
 
@@ -333,7 +334,7 @@ Verificacao executada em 09/10/2026 com Java 25 e Maven 3.9.11:
 
 ```text
 mvn clean verify
-Tests run: 57, Failures: 0, Errors: 0, Skipped: 0
+Tests run: 35, Failures: 0, Errors: 0, Skipped: 0
 All coverage checks have been met.
 BUILD SUCCESS
 ```
